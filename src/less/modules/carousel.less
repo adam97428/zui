@@ -1,12 +1,19 @@
-//
-// Carousel
-// --------------------------------------------------
+/// ========================================================================
+/// Bootstrap: carousel.less
+/// https://github.com/twbs/bootstrap/blob/master/less/carousel.less
+/// 
+/// ZUI: The file has been changed in ZUI. It will not keep update with the
+/// Bootsrap version in the future.
+/// http://zui.sexy
+/// ========================================================================
+/// Bootrap: Copyright 2011-2016 Twitter, Inc. Licensed under MIT
+/// ========================================================================
 
+
+// Core style
 
 // Wrapper for the slide container and indicators
-.carousel {
-  position: relative;
-}
+.carousel { position: relative; }
 
 .carousel-inner {
   position: relative;
@@ -21,18 +28,18 @@
     // Account for jankitude on images
     > img,
     > a > img {
-      .img-responsive();
+      &:extend(.img-responsive);
       line-height: 1;
     }
   }
 
   > .active,
   > .next,
-  > .prev { display: block; }
-
-  > .active {
-    left: 0;
+  > .prev {
+    display: block;
   }
+
+  > .active { left: 0; }
 
   > .next,
   > .prev {
@@ -42,28 +49,19 @@
 
   }
 
-  > .next {
-    left: 100%;
-  }
-  > .prev {
-    left: -100%;
-  }
+  > .next { left: 100%; }
+  > .prev { left: -100%; }
   > .next.left,
   > .prev.right {
     left: 0;
   }
 
-  > .active.left {
-    left: -100%;
-  }
-  > .active.right {
-    left: 100%;
-  }
-
+  > .active.left { left: -100%; }
+  > .active.right { left: 100%; }
 }
 
+
 // Left/right controls for nav
-// ---------------------------
 
 .carousel-control {
   position: absolute;
@@ -72,22 +70,24 @@
   bottom: 0;
   width: @carousel-control-width;
   .opacity(@carousel-control-opacity);
-  font-size: @carousel-control-font-size;
   color: @carousel-control-color;
   text-align: center;
   text-shadow: @carousel-text-shadow;
   outline: none;
+
+  > .icon {font-size: @carousel-control-font-size;}
+
   // We can't have this transition here because webkit cancels the carousel
   // animation if you trip this while in the middle of another animation.
 
   // Set gradients for backgrounds
   &.left {
-    #gradient > .horizontal(@start-color: rgba(0,0,0,.5); @end-color: rgba(0,0,0,.0001));
+    #gradient > .horizontal(@start-color: rgba(0,0,0,.3); @end-color: rgba(0,0,0,.0001));
   }
   &.right {
     left: auto;
     right: 0;
-    #gradient > .horizontal(@start-color: rgba(0,0,0,.0001); @end-color: rgba(0,0,0,.5));
+    #gradient > .horizontal(@start-color: rgba(0,0,0,.0001); @end-color: rgba(0,0,0,.3));
   }
 
   // Hover/focus state
@@ -96,7 +96,7 @@
     color: @carousel-control-color;
     text-decoration: none;
     outline: none;
-    .opacity(.9);
+    .opacity(1);
   }
 
   // Toggles
@@ -138,8 +138,9 @@
   }
 }
 
+
 // Optional captions
-// -----------------------------
+
 // Hidden by default for smaller viewports
 .carousel-caption {
   position: absolute;
@@ -171,12 +172,10 @@
     margin-left: -15px;
     font-size: 80px;
   }
-  .carousel-control .icon-prev
-  {
+  .carousel-control .icon-prev {
     left: 30%;
   }
-  .carousel-control .icon-next
-  {
+  .carousel-control .icon-next {
     right: 25%;
   }
 

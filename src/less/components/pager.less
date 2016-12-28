@@ -1,20 +1,28 @@
-//
-// pager (multiple pages)
-// --------------------------------------------------
-.pager
-{
+/// ========================================================================
+/// Bootstrap: pager.less
+/// https://github.com/twbs/bootstrap/blob/master/less/pager.less
+/// https://github.com/twbs/bootstrap/blob/master/less/pagination.less
+/// 
+/// ZUI: The file has been changed in ZUI. It will not keep update with the
+/// Bootsrap version in the future.
+/// http://zui.sexy
+/// ========================================================================
+/// Bootrap: Copyright 2011-2016 Twitter, Inc. Licensed under MIT
+/// ========================================================================
+
+
+// Base style
+
+.pager {
   display: inline-block;
   padding-left: 0;
   margin: @line-height-computed 0;
-  border-radius: @border-radius-base;
+  list-style: none;
 
-  > li
-  {
+  > li {
     display: inline; // Remove list-style and block-level defaults
     > a,
-    > span
-    {
-      .transition(all,@animation-speed-fast,@animation-type);
+    > span {
       position: relative;
       float: left; // Collapse white-space
       padding: @padding-base-vertical @padding-base-horizontal;
@@ -24,86 +32,79 @@
       border: 1px solid @pager-border;
       margin-left: -1px;
     }
-    &:first-child
-    {
+    &:first-child {
       > a,
-      > span
-      {
+      > span {
         margin-left: 0;
         .border-left-radius(@border-radius-base);
       }
     }
-    &:last-child
-    {
+    &:last-child {
       > a,
-      > span
-      {
+      > span {
         .border-right-radius(@border-radius-base);
       }
     }
   }
 
   > li > a,
-  > li > span
-  {
+  > li > span {
     &:hover,
-    &:focus
-    {
+    &:focus {
+      z-index: 2;
       background-color: @pager-hover-bg;
     }
   }
 
-  > .active > a,
-  > .active > span
-  {
+  > li.active > a,
+  > li.active > span {
     &,
-    &:hover,
-    &:focus {
-      z-index: 2;
+    &:hover {
+      z-index: 3;
       color: @pager-active-color;
       background-color: @pager-active-bg;
+      border-color: @pager-active-bg;
       cursor: default;
-      .active-mark-bottom();
     }
   }
 
-  > .disabled
-  {
+  > li.disabled {
     > span,
     > span:hover,
     > span:focus,
     > a,
     > a:hover,
-    > a:focus
-    {
+    > a:focus {
       color: @pager-disabled-color;
       background-color: @pager-bg;
       border-color: @pager-border;
       cursor: not-allowed;
+      pointer-events: none;
     }
   }
 }
 
-.pager-justify
-{
+
+// Justified pager
+
+.pager-justify {
   display: block;
-  .clearfix();
-  .next 
-  {
+
+  &:extend(.clearfix all);
+
+  .next {
     > a,
-    > span 
-    {
+    > span {
       float: right;
+      border-radius: @border-radius-base;
     }
   }
 
-  .previous
-  {
+  .previous {
     > a,
-    > span 
-    {
+    > span {
       float: left;
+      border-radius: @border-radius-base;
     }
   }
-
 }

@@ -1,258 +1,404 @@
-/* Modal Trigger */
-+function ($, window, document, Math)
-{
-    "use strict";
+/* ========================================================================
+ * ZUI: modal.trigger.js [1.2.0+]
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
+ * ======================================================================== */
 
-    if (!$.fn.modal) throw new Error('Modal trigger requires modal.js')
-    // if (!String.prototype.format) throw new Error('Modal trigger requires string.js')
 
-    var ModalTrigger = function(element, options)
-    {
-        this.$         = $(element);
-        this.options   = this.getOptions(options);
+(function($, window) {
+    'use strict';
 
-        this.init();
+    if(!$.fn.modal) throw new Error('Modal trigger requires modal.js');
+
+    var NAME = 'zui.modaltrigger',
+        STR_AJAX = 'ajax',
+        ZUI_MODAL = '.zui.modal',
+        STR_STRING = 'string';
+
+    // MODAL TRIGGER CLASS DEFINITION
+    // ======================
+    var ModalTrigger = function(options, $trigger) {
+        options = $.extend({}, ModalTrigger.DEFAULTS, $.ModalTriggerDefaults, $trigger ? $trigger.data() : null, options);
+        this.isShown;
+        this.$trigger = $trigger;
+        this.options = options;
+        this.id = $.zui.uuid();
+
+        // todo: handle when: options.show = true
     };
 
-    ModalTrigger.DEFAULTS =
-    {
-        type:            'ajax',
-        width:           null,
-        height:          'auto',
-        icon:            '*',
-        // title:      '',
-        name:            'modalIframe',
-        fade:             true,
-        // cssClass:   null,
-        // headerless: null,
-        position:        'fit',
-        iframeTeamplate: "<div class='icon-spinner icon-spin loader'></div><div class='modal-dialog modal-iframe' style='width: {width};'><div class='modal-content'><div class='modal-header'><button class='close' data-dismiss='modal'>×</button><h4 class='modal-title'><i class='icon-{icon}'></i> {title}</h4></div><div class='modal-body' style='height:{height}'><iframe id='{name}' name='{name}' src='{url}' frameborder='no' allowtransparency='true' scrolling='auto' hidefocus='' style='width: 100%; height: 100%; left: 0px;'></iframe></div></div></div>",
-        ajaxTeamplate: "<div class='icon-spinner icon-spin loader'></div><div class='modal-dialog modal-ajax' style='width: {width};'><div class='modal-content'><div class='modal-header'><button class='close' data-dismiss='modal'>×</button><h4 class='modal-title'><i class='icon-{icon}'></i> {title}</h4></div><div class='modal-body' style='height:{height}'></div></div></div>"
+    ModalTrigger.DEFAULTS = {
+        type: 'custom',
+        // width: null, // number, css definition
+        // size: null, // 'md', 'sm', 'lg', 'fullscreen'
+        height: 'auto',
+        // icon: null,
+        name: 'triggerModal',
+        fade: true,
+        position: 'fit',
+        showHeader: true,
+        delay: 0,
+        // iframeBodyClass: '',
+        // onlyIncreaseHeight: false,
+        // moveable: false,
+        // rememberPos: false,
+        backdrop: true,
+        keyboard: true,
+        waittime: 0,
+        loadingIcon: 'icon-spinner-indicator'
     };
 
-
-    ModalTrigger.prototype.getOptions = function (options)
-    {
-        options = $.extend({title: this.$.text()}, ModalTrigger.DEFAULTS, this.$.data(), options);
-        if(typeof options.height === 'number') options.height += 'px';
-        if(typeof options.width === 'number') options.width += 'px';
-        if(options.icon == '*')
-        {
-            var i = this.$.find("[class^='icon-']");
-            options.icon = i.length ? i.attr('class').substring(5) : '';
+    ModalTrigger.prototype.init = function(options) {
+        var that = this;
+        if(options.url) {
+            if(!options.type || (options.type != STR_AJAX && options.type != 'iframe')) {
+                options.type = STR_AJAX;
+            }
         }
-        return options;
+        if(options.remote) {
+            options.type = STR_AJAX;
+            if(typeof options.remote === STR_STRING) options.url = options.remote;
+        } else if(options.iframe) {
+            options.type = 'iframe';
+            if(typeof options.iframe === STR_STRING) options.url = options.iframe;
+        } else if(options.custom) {
+            options.type = 'custom';
+            if(typeof options.custom === STR_STRING) {
+                var $doms;
+                try {
+                    $doms = $(options.custom);
+                } catch(e) {}
+
+                if($doms && $doms.length) {
+                    options.custom = $doms;
+                } else if($.isFunction(window[options.custom])) {
+                    options.custom = window[options.custom];
+                }
+            }
+        }
+
+        var $modal = $('#' + options.name);
+        if($modal.length) {
+            if(!that.isShown) $modal.off(ZUI_MODAL);
+            $modal.remove();
+        }
+        $modal = $('<div id="' + options.name + '" class="modal modal-trigger">' + (typeof options.loadingIcon === 'string' && options.loadingIcon.indexOf('icon-') === 0 ? ('<div class="icon icon-spin loader ' + options.loadingIcon + '"></div>') : options.loadingIcon) + '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button class="close" data-dismiss="modal">×</button><h4 class="modal-title"><i class="modal-icon"></i> <span class="modal-title-name"></span></h4></div><div class="modal-body"></div></div></div></div>').appendTo('body').data(NAME, that);
+
+        var bindEvent = function(optonName, eventName) {
+            var handleFunc = options[optonName];
+            if($.isFunction(handleFunc)) $modal.on(eventName + ZUI_MODAL, handleFunc);
+        };
+        bindEvent('onShow', 'show');
+        bindEvent('shown', 'shown');
+        bindEvent('onHide', 'hide');
+        bindEvent('hidden', 'hidden');
+        bindEvent('loaded', 'loaded');
+
+        $modal.on('shown' + ZUI_MODAL, function() {
+            that.isShown = true;
+        }).on('hidden' + ZUI_MODAL, function() {
+            that.isShown = false;
+        });
+
+        this.$modal = $modal;
+        this.$dialog = $modal.find('.modal-dialog');
+
+        if(options.mergeOptions) this.options = options;
     };
 
-    ModalTrigger.prototype.init = function()
-    {
-        this.initModal();
-        this.handleClick();
-    };
+    ModalTrigger.prototype.show = function(option) {
+        var options = $.extend({}, this.options, {url: this.$trigger ? (this.$trigger.attr('href') || this.$trigger.attr('data-url') || this.$trigger.data('url')) : this.options.url}, option);
+        this.init(options);
+        var that = this,
+            $modal = this.$modal,
+            $dialog = this.$dialog,
+            custom = options.custom;
+        var $body = $dialog.find('.modal-body').css('padding', ''),
+            $header = $dialog.find('.modal-header'),
+            $content = $dialog.find('.modal-content');
 
-    ModalTrigger.prototype.handleClick = function()
-    {
-        var options = this.options;
-        var modal   = this.modal;
-        this.$.click(function(event)
-        {
-            var $e   = $(this);
-            if($e.attr('disabled') == 'disabled' || $e.hasClass('disabled')) return false;
+        $modal.toggleClass('fade', options.fade)
+            .addClass(options.cssClass)
+            .toggleClass('modal-loading', !this.isShown);
 
-            options.url  = (options ? options.url : false) || $e.attr('href');
-            var cssClass = options.cssClass;
+        $dialog.toggleClass('modal-md', options.size === 'md')
+            .toggleClass('modal-sm', options.size === 'sm')
+            .toggleClass('modal-lg', options.size === 'lg')
+            .toggleClass('modal-fullscreen', options.size === 'fullscreen');
 
-            if(options.size == 'fullscreen')
-            {
-                var $w = $(window);
-                options.width = $w.width();
-                options.height = $w.height();
-                cssClass += ' fullscreen';
-            }
-            if(options.headerless)
-            {
-                cssClass += ' hide-header';
-            }
-            else if(options.size == 'fullscreen')
-            {
-                options.height -= modal.find('.modal-header').outerHeight();
-            }
+        $header.toggle(options.showHeader);
+        $header.find('.modal-icon').attr('class', 'modal-icon icon-' + options.icon);
+        $header.find('.modal-title-name').html(options.title || '');
+        if(options.size && options.size === 'fullscreen') {
+            options.width = '';
+            options.height = '';
+        }
 
-            modal.addClass('modal-loading').toggleClass('fade', options.fade);;
+        var resizeDialog = function() {
+            clearTimeout(this.resizeTask);
+            this.resizeTask = setTimeout(function() {
+                that.ajustPosition();
+            }, 100);
+        };
 
-            if(options.type === 'custom' && options['custom'])
-            {
-                options['custom']({modal: modal, options: options, element: $e, ready: function()
-                {
-                    ajustModalPosition(options.position, modal.find('.modal-dialog'));
-                    modal.removeClass('modal-loading');
-                }});
-            }
-            else if(options.type === 'ajax')
-            {
-                modal.load(options.url, function()
-                {
-                    setTimeout(function()
-                    {
-                        var modalBody = modal.find('.modal-body'), dialog = modal.find('.modal-dialog');
-                        if(options.width)
-                        {
-                            dialog.css('width', options.width);
-                        }
-                        if(options.height != 'auto') modalBody.css('height', options.height);
-                        if(options.width) dialog.css('width', options.width);
-                        ajustModalPosition(options.position, dialog);
-                        modal.removeClass('modal-loading');
-                    },200);
+        var readyToShow = function(delay, callback) {
+            if(typeof delay === 'undefined') delay = options.delay;
+            return setTimeout(function() {
+                $dialog = $modal.find('.modal-dialog');
+                if(options.width && options.width != 'auto') {
+                    $dialog.css('width', options.width);
+                }
+                if(options.height && options.height != 'auto') {
+                    $dialog.css('height', options.height);
+                    if(options.type === 'iframe') $body.css('height', $dialog.height() - $header.outerHeight());
+                }
+                that.ajustPosition(options.position);
+                $modal.removeClass('modal-loading');
+
+                if(options.type != 'iframe') {
+                    $dialog.off('resize.' + NAME).on('resize.' + NAME, resizeDialog);
+                }
+
+                callback && callback();
+            }, delay);
+        };
+
+        if(options.type === 'custom' && custom) {
+            if($.isFunction(custom)) {
+                var customContent = custom({
+                    modal: $modal,
+                    options: options,
+                    modalTrigger: that,
+                    ready: readyToShow
                 });
+                if(typeof customContent === STR_STRING) {
+                    $body.html(customContent);
+                    readyToShow();
+                }
+            } else if(custom instanceof $) {
+                $body.html($('<div>').append(custom.clone()).html());
+                readyToShow();
+            } else {
+                $body.html(custom);
+                readyToShow();
             }
-            else
-            {
-                modal.data('first', true);
-                modal.html(options.iframeTeamplate.format(options));
-                var modalBody = modal.find('.modal-body'), dialog = modal.find('.modal-dialog');
-                if(cssClass)
-                {
-                    dialog.addClass(options.cssClass);
+        } else if(options.url) {
+            var onLoadBroken = function() {
+                var brokenContent = $modal.callEvent('broken' + ZUI_MODAL, that, that);
+                if(brokenContent) {
+                    $body.html(brokenContent);
                 }
-                if(options.width)
-                {
-                    dialog.css('width', options.width);
+            };
+
+            $modal.attr('ref', options.url);
+            if(options.type === 'iframe') {
+                $modal.addClass('modal-iframe');
+                this.firstLoad = true;
+                var iframeName = 'iframe-' + options.name;
+                $header.detach();
+                $body.detach();
+                $content.empty().append($header).append($body);
+                $body.css('padding', 0)
+                    .html('<iframe id="' + iframeName + '" name="' + iframeName + '" src="' + options.url + '" frameborder="no"  allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"  allowtransparency="true" scrolling="auto" style="width: 100%; height: 100%; left: 0px;"></iframe>');
+
+                if(options.waittime > 0) {
+                    that.waitTimeout = readyToShow(options.waittime, onLoadBroken);
                 }
 
-                var frame = document.getElementById(options.name);
-                frame.onload = frame.onreadystatechange = function()
-                {
-                    if(!modal.data('first')) modal.addClass('modal-loading');
-                    if (this.readyState && this.readyState != 'complete') return;
-                    modal.data('first', false);
+                var frame = document.getElementById(iframeName);
+                frame.onload = frame.onreadystatechange = function() {
+                    if(that.firstLoad) $modal.addClass('modal-loading');
+                    if(this.readyState && this.readyState != 'complete') return;
+                    that.firstLoad = false;
 
-                    try
-                    {
-                        var $frame = $(window.frames[options.name].document);
-
-                        if(options.height == 'auto' && options.size != 'fullscreen')
-                        {
-                            var $framebody = $frame.find('body');
-                            setTimeout(function()
-                            {
-                                modalBody.css('height', $framebody.addClass('body-modal').outerHeight());
-                                ajustModalPosition(options.position, dialog);
-                                modal.removeClass('modal-loading');
-                            }, 100);
-
-                            $framebody.resize(function()
-                            {
-                                modalBody.css('height', $framebody.outerHeight());
-                            });
-                        }
-                        else
-                        {
-                            modal.removeClass('modal-loading');
-                        }
-
-                        var iframe$ = window.frames[options.name].$;
-                        if(iframe$)
-                        {
-                            iframe$.extend({'closeModal': $.closeModal});
-                        }
+                    if(options.waittime > 0) {
+                        clearTimeout(that.waitTimeout);
                     }
-                    catch(e){modal.removeClass('modal-loading');}
-                }
+
+                    try {
+                        $modal.attr('ref', frame.contentWindow.location.href);
+                        var frame$ = window.frames[iframeName].$;
+                        if(frame$ && options.height === 'auto' && options.size != 'fullscreen') {
+                            // todo: update iframe url to ref attribute
+                            var $framebody = frame$('body').addClass('body-modal');
+                            if(options.iframeBodyClass) $framebody.addClass(options.iframeBodyClass);
+                            var ajustFrameSize = function(check) {
+                                $modal.removeClass('fade');
+                                var height = $framebody.outerHeight();
+                                if(check === true && options.onlyIncreaseHeight) {
+                                    height = Math.max(height, $body.data('minModalHeight') || 0);
+                                    $body.data('minModalHeight', height);
+                                }
+                                $body.css('height', height);
+                                if(options.fade) $modal.addClass('fade');
+                                readyToShow();
+                            };
+
+                            $modal.callEvent('loaded' + ZUI_MODAL, {
+                                modalType: 'iframe',
+                                jQuery: frame$
+                            }, null);
+
+                            setTimeout(ajustFrameSize, 100);
+
+                            $framebody.off('resize.' + NAME).on('resize.' + NAME, resizeDialog);
+                        } else {
+                            readyToShow();
+                        }
+
+                        frame$.extend({
+                            closeModal: window.closeModal
+                        });
+                    } catch(e) {
+                        readyToShow();
+                    }
+                };
+            } else {
+                $.get(options.url, function(data) {
+                    try {
+                        var $data = $(data);
+                        if($data.hasClass('modal-dialog')) {
+                            $dialog.replaceWith($data);
+                        } else if($data.hasClass('modal-content')) {
+                            $dialog.find('.modal-content').replaceWith($data);
+                        } else {
+                            $body.wrapInner($data);
+                        }
+                    } catch(e) {
+                        $modal.html(data);
+                    }
+                    $modal.callEvent('loaded' + ZUI_MODAL, {
+                        modalType: STR_AJAX
+                    }, that);
+                    readyToShow();
+                }).error(onLoadBroken);
             }
+        }
 
-            modal.modal('show')
-
-            /* Save the href to rel attribute thus we can save it. */
-            modal.attr('rel', options.url);
-            return false;
+        $modal.modal({
+            show: 'show',
+            backdrop: options.backdrop,
+            moveable: options.moveable,
+            keyboard: options.keyboard
         });
     };
 
-    ModalTrigger.prototype.initModal = function()
-    {
-        var name = 'ajaxModal', setting = this.options;
-        var loc  = setting.location;
-        if($('#' + name).length)
-        {
-            /* unbind all events */
-            $(name).off('show.bs.modal shown.bs.modal hide.bs.modal hidden.bs.modal');
-        }
-        else
-        {
-            /* Addpend modal div. */
-            $('<div id="' + name + '" class="modal fade"></div>').appendTo('body');
-        }
+    ModalTrigger.prototype.close = function(callback, redirect) {
+        if(callback || redirect) {
+            this.$modal.on('hidden' + ZUI_MODAL, function() {
+                if($.isFunction(callback)) callback();
 
-        var $ajaxModal = $('#' + name);
-        this.modal = $ajaxModal.data('options', setting);
-        $.extend({'closeModal':function(callback, location)
-        {
-            location = location || loc;
-            $ajaxModal.on('hidden.bs.modal', function()
-            {
-                if(location)
-                {
-                    if(location == 'this') window.location.reload();
-                    else window.location = location;
+                if(typeof redirect === STR_STRING) {
+                    if(redirect === 'this') window.location.reload();
+                    else window.location = redirect;
                 }
-                if(callback && $.isFunction(callback)) callback();
             });
-            $ajaxModal.modal('hide');
-        }});
-
-        /* rebind events */
-        if(setting.afterShow && $.isFunction(setting.afterShow)) $ajaxModal.on('show.bs.modal', setting.afterShow);
-        if(setting.afterShown && $.isFunction(setting.afterShown)) $ajaxModal.on('shown.bs.modal', setting.afterShown);
-        if(setting.afterHide && $.isFunction(setting.afterHide)) $ajaxModal.on('hide.bs.modal', setting.afterHide);
-        if(setting.afterHidden && $.isFunction(setting.afterHidden)) $ajaxModal.on('hidden.bs.modal', setting.afterHidden);
-    };
-
-    function ajustModalPosition(position, dialog)
-    {
-        if(position)
-        {
-           var half = Math.max(0, ($(window).height() - dialog.outerHeight())/2);
-           var pos = position == 'fit' ? (half*2/3) : (position == 'center' ? half : position);
-           dialog.css('margin-top', pos);
         }
-    }
-
-    $.fn.modalTrigger = function(option)
-    {
-        return this.each(function()
-        {
-            var $this   = $(this);
-            var data    = $this.data('zui.modalTrigger');
-            var options = typeof option == 'object' && option;
-
-            if (!data) $this.data('zui.dataTable', (data = new ModalTrigger(this, options)));
-
-            if (typeof option == 'string') data[option]();
-        })
+        this.$modal.modal('hide');
     };
 
-    $(function()
-    {
-        $('[data-toggle="modal"]').each(function(event)
-        {
-            var $this = $(this);
-            var href = $this.attr('href');
-            if($this.hasClass('iframe'))
-            {
-                $this.modalTrigger({type: 'iframe'});
-            }
-            else
-            {
-                var target = $this.attr('href') || $this.data('target');
-                try
-                {
-                  if(!$(target).length) $this.modalTrigger();
-                }
-                catch(e){$this.modalTrigger();}
-            }
-        });
+    ModalTrigger.prototype.toggle = function(options) {
+        if(this.isShown) this.close();
+        else this.show(options);
+    };
 
+    ModalTrigger.prototype.ajustPosition = function(position) {
+        this.$modal.modal('ajustPosition', position || this.options.position);
+    };
+
+    $.zui({
+        ModalTrigger: ModalTrigger,
+        modalTrigger: new ModalTrigger()
     });
 
-}(window.jQuery, window, document, Math);
+    $.fn.modalTrigger = function(option, settings) {
+        return $(this).each(function() {
+            var $this = $(this);
+            var data = $this.data(NAME),
+                options = $.extend({
+                    title: $this.attr('title') || $this.text(),
+                    url: $this.attr('href'),
+                    type: $this.hasClass('iframe') ? 'iframe' : ''
+                }, $this.data(), $.isPlainObject(option) && option);
+            if(!data) $this.data(NAME, (data = new ModalTrigger(options, $this)));
+            if(typeof option == STR_STRING) data[option](settings);
+            else if(options.show) data.show(settings);
+
+            $this.on((options.trigger || 'click') + '.toggle.' + NAME, function(e) {
+                data.toggle(options);
+                if($this.is('a')) e.preventDefault();
+            });
+        });
+    };
+
+    var old = $.fn.modal;
+    $.fn.modal = function(option, settings) {
+        return $(this).each(function() {
+            var $this = $(this);
+            if($this.hasClass('modal')) old.call($this, option, settings);
+            else $this.modalTrigger(option, settings);
+        });
+    };
+
+    var getModal = function(modal) {
+        var modalType = typeof(modal);
+        if(modalType === 'undefined') {
+            modal = $('.modal.modal-trigger');
+        } else if(modalType === STR_STRING) {
+            modal = $(modal);
+        }
+        if(modal && (modal instanceof $)) return modal;
+        return null;
+    };
+
+    // callback, redirect, modal
+    var closeModal = function(modal, callback, redirect) {
+        if($.isFunction(modal)) {
+            var oldModal = redirect;
+            redirect = callback;
+            callback = modal;
+            modal = oldModal;
+        }
+        modal = getModal(modal);
+        if(modal && modal.length) {
+            modal.each(function() {
+                $(this).data(NAME).close(callback, redirect);
+            });
+        }
+    };
+
+    var ajustModalPosition = function(position, modal) {
+        modal = getModal(modal);
+        if(modal && modal.length) {
+            modal.modal('ajustPosition', position);
+        }
+    };
+
+    $.zui({
+        closeModal: closeModal,
+        ajustModalPosition: ajustModalPosition
+    });
+
+    $(document).on('click.' + NAME + '.data-api', '[data-toggle="modal"]', function(e) {
+        var $this = $(this);
+        var href = $this.attr('href');
+        var $target = null;
+        try {
+            $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, '')));
+        } catch(ex) {}
+        if(!$target || !$target.length) {
+            if(!$this.data(NAME)) {
+                $this.modalTrigger({
+                    show: true,
+                });
+            } else {
+                $this.trigger('.toggle.' + NAME);
+            }
+        }
+        if($this.is('a')) {
+            e.preventDefault();
+        }
+    });
+}(window.jQuery, window));
+

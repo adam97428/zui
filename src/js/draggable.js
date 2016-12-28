@@ -1,116 +1,167 @@
-/* Draggable */
-+function($, window, document, Math)
-{
-    "use strict";
+/* ========================================================================
+ * ZUI: draggable.js
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
+ * ======================================================================== */
 
-    var Draggable = function(element, options)
-    {
-        this.$         = $(element);
-        this.options   = this.getOptions(options);
 
+(function($) {
+    'use strict';
+
+    var Draggable = function(element, options) {
+        this.$ = $(element);
+        this.options = this.getOptions(options);
         this.init();
     };
 
-    Draggable.DEFAULTS = {container: 'body', move: true};
+    Draggable.DEFAULTS = {
+        container: 'body',
+        move: true
+    };
 
-    Draggable.prototype.getOptions = function (options)
-    {
+    Draggable.prototype.getOptions = function(options) {
         options = $.extend({}, Draggable.DEFAULTS, this.$.data(), options);
         return options;
     };
 
-    Draggable.prototype.init = function()
-    {
+    Draggable.prototype.init = function() {
         this.handleMouseEvents();
-    }
+    };
 
-    Draggable.prototype.handleMouseEvents = function()
-    {
-        var $e      = this.$,
-            setting = this.options;
+    Draggable.prototype.handleMouseEvents = function() {
+        var $e = this.$,
+            BEFORE = 'before',
+            DRAG = 'drag',
+            FINISH = 'finish',
+            setting = this.options,
+            startPos, cPos, startOffset, mousePos, moved;
 
-        $e.mousedown(function(event)
-        {
-            if(setting.hasOwnProperty('before') && $.isFunction(setting['before']))
-            {
-                var isSure = setting['before']({event: event, element: $e});
-                if (isSure != undefined && (!isSure)) return;
+        var mouseDown = function(event) {
+            if($.isFunction(setting[BEFORE])) {
+                var isSure = setting[BEFORE]({
+                    event: event,
+                    element: $e
+                });
+                if(isSure === false) return;
             }
 
             var $container = $(setting.container),
                 pos = $e.offset();
-            var cPos = $container.offset(),
-                startPos = {x: event.pageX, y: event.pageY},
-                startOffset = {x: event.pageX - pos.left + cPos.left, y: event.pageY - pos.top + cPos.top};
-            var mousePos = $.extend({}, startPos);
-            var moved = false;
+            cPos = $container.offset();
+            startPos = {
+                x: event.pageX,
+                y: event.pageY
+            };
+            startOffset = {
+                x: event.pageX - pos.left + cPos.left,
+                y: event.pageY - pos.top + cPos.top
+            };
+            mousePos = $.extend({}, startPos);
+            moved = false;
 
             $e.addClass('drag-ready');
-            $(document).bind('mousemove',mouseMove).bind('mouseup',mouseUp);
+            $(document).bind('mousemove', mouseMove).bind('mouseup', mouseUp);
             event.preventDefault();
-            if(setting.stopPropagation) {event.stopPropagation();}
+            if(setting.stopPropagation) {
+                event.stopPropagation();
+            }
+        };
 
-            function mouseMove(event)
-            {
-                moved = true;
-                var mX = event.pageX,
-                    mY = event.pageY;
-                var dragPos = {left: mX-startOffset.x, top: mY-startOffset.y};
-                    
-                $e.removeClass('drag-ready').addClass('dragging');
-                if(setting.move)
-                {
-                    $e.css(dragPos);
-                }
-                
-                if(setting.hasOwnProperty('drag') && $.isFunction(setting['drag']))
-                {
-                    setting['drag']({event: event, element: $e, startOffset: startOffset, pos: dragPos, offset: {x: mX - startPos.x, y: mY - startPos.y}, smallOffset: {x: mX - mousePos.x, y: mY - mousePos.y}});
-                }
-                mousePos.x = mX;
-                mousePos.y = mY;
+        var mouseMove = function(event) {
+            moved = true;
+            var mX = event.pageX,
+                mY = event.pageY;
+            var dragPos = {
+                left: mX - startOffset.x,
+                top: mY - startOffset.y
+            };
 
-                if(setting.stopPropagation) {event.stopPropagation();}
+            $e.removeClass('drag-ready').addClass('dragging');
+            if(setting.move) {
+                $e.css(dragPos);
             }
 
-            function mouseUp(event)
-            {
-                $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
-                if(!moved)
-                {
-                    $e.removeClass('drag-ready');
-                    return;
-                }
-                var endPos = {left: event.pageX - startOffset.x, top: event.pageY - startOffset.y};
-                $e.removeClass('drag-ready').removeClass('dragging');
-                if(setting.move)
-                {
-                    $e.css(endPos);
-                }
-
-                if(setting.hasOwnProperty('finish') && $.isFunction(setting['finish']))
-                {
-                    setting['finish']({event: event, element: $e, pos: endPos, offset: {x: event.pageX - startPos.x, y: event.pageY - startPos.y}, smallOffset: {x: event.pageX - mousePos.x, y: event.pageY - mousePos.y}});
-                }
-                event.preventDefault();
-                if(setting.stopPropagation) {event.stopPropagation();}
+            if($.isFunction(setting[DRAG])) {
+                setting[DRAG]({
+                    event: event,
+                    element: $e,
+                    startOffset: startOffset,
+                    pos: dragPos,
+                    offset: {
+                        x: mX - startPos.x,
+                        y: mY - startPos.y
+                    },
+                    smallOffset: {
+                        x: mX - mousePos.x,
+                        y: mY - mousePos.y
+                    }
+                });
             }
-        });
-    }
+            mousePos.x = mX;
+            mousePos.y = mY;
 
-    $.fn.draggable = function(option)
-    {
-        return this.each(function()
-        {
-            var $this   = $(this);
-            var data    = $this.data('zui.draggable');
+            if(setting.stopPropagation) {
+                event.stopPropagation();
+            }
+        };
+
+        var mouseUp = function(event) {
+            $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
+            if(!moved) {
+                $e.removeClass('drag-ready');
+                return;
+            }
+            var endPos = {
+                left: event.pageX - startOffset.x,
+                top: event.pageY - startOffset.y
+            };
+            $e.removeClass('drag-ready').removeClass('dragging');
+            if(setting.move) {
+                $e.css(endPos);
+            }
+
+            if($.isFunction(setting[FINISH])) {
+                setting[FINISH]({
+                    event: event,
+                    element: $e,
+                    startOffset: startOffset,
+                    pos: endPos,
+                    offset: {
+                        x: event.pageX - startPos.x,
+                        y: event.pageY - startPos.y
+                    },
+                    smallOffset: {
+                        x: event.pageX - mousePos.x,
+                        y: event.pageY - mousePos.y
+                    }
+                });
+            }
+            event.preventDefault();
+            if(setting.stopPropagation) {
+                event.stopPropagation();
+            }
+        };
+
+        if(setting.handle) {
+            $e.on('mousedown', setting.handle, mouseDown);
+        } else {
+            $e.on('mousedown', mouseDown);
+        }
+    };
+
+    $.fn.draggable = function(option) {
+        return this.each(function() {
+            var $this = $(this);
+            var data = $this.data('zui.draggable');
             var options = typeof option == 'object' && option;
 
-            if (!data) $this.data('zui.draggable', (data = new Draggable(this, options)));
+            if(!data) $this.data('zui.draggable', (data = new Draggable(this, options)));
 
-            if (typeof option == 'string') data[option]();
-        })
+            if(typeof option == 'string') data[option]();
+        });
     };
 
     $.fn.draggable.Constructor = Draggable;
-}(jQuery,window,document,Math);
+}(jQuery));
+

@@ -1,151 +1,240 @@
-/* Droppable */
-+function($, window, document, Math)
-{
-    "use strict";
+/* ========================================================================
+ * ZUI: droppable.js
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
+ * ======================================================================== */
 
-    var Droppable = function(element, options)
-    {
-        this.$         = $(element);
-        this.options   = this.getOptions(options);
+
+(function($, document, Math) {
+    'use strict';
+
+    var Droppable = function(element, options) {
+        this.$ = $(element);
+        this.options = this.getOptions(options);
 
         this.init();
     };
 
-    Droppable.DEFAULTS = {container: 'body', flex: false, deviation: 5};
+    Droppable.DEFAULTS = {
+        container: 'body',
+        // flex: false,
+        // nested: false,
+        deviation: 5,
+        sensorOffsetX: 0,
+        sensorOffsetY: 0
+    };
 
-    Droppable.prototype.getOptions = function (options)
-    {
+    Droppable.prototype.getOptions = function(options) {
         options = $.extend({}, Droppable.DEFAULTS, this.$.data(), options);
         return options;
     };
 
-    Droppable.prototype.init = function()
-    {
+    Droppable.prototype.callEvent = function(name, params) {
+        return $.zui.callEvent(this.options[name], params, this);
+    };
+
+    Droppable.prototype.init = function() {
         this.handleMouseEvents();
-    }
+    };
 
-    Droppable.prototype.handleMouseEvents = function()
-    {
-        var $e      = this.$,
-            setting = this.options;
+    Droppable.prototype.handleMouseEvents = function() {
+        var $e = this.$,
+            self = this,
+            setting = this.options,
+            BEFORE = 'before';
 
+        this.$triggerTarget = (setting.trigger ? ($.isFunction(setting.trigger) ? setting.trigger($e) : $e.find(setting.trigger)).first() : $e);
 
-        $e.mousedown(function(event)
-        {
-            if(setting.hasOwnProperty('before') && $.isFunction(setting['before']))
-            {
-                var isSure = setting['before']({event: event, element: $e});
-                if (isSure != undefined && (!isSure)) return;
+        this.$triggerTarget.on('mousedown', function(event) {
+            if($.isFunction(setting[BEFORE])) {
+                var isSure = setting[BEFORE]({
+                    event: event,
+                    element: $e
+                });
+                if(isSure === false) return;
             }
 
-            var $targets = $(setting.target),
+            var $targets = $.isFunction(setting.target) ? setting.target($e) : $(setting.target),
                 target = null,
                 shadow = null,
-                $container = $(setting.container),
-                pos = $e.offset(),
-                startPos = {x: event.pageX, y: event.pageY},
-                isIn = false, isSelf = true;
-            var cPos = $container.offset(),
-                startOffset = {x: event.pageX - pos.left + cPos.left, y: event.pageY - pos.top + cPos.top};
+                $container = $(setting.container).first(),
+                isIn = false,
+                isSelf = true,
+                oldCssPosition,
+                startOffset = $e.offset(),
+                startMouseOffset = {
+                    left: event.pageX,
+                    top: event.pageY
+                };
+            var containerOffset = $container.offset();
+            var clickOffset = {
+                left: startMouseOffset.left - startOffset.left,
+                top: startMouseOffset.top - startOffset.top
+            };
+            var lastMouseOffset = {
+                left: startMouseOffset.left,
+                top: startMouseOffset.top
+            };
 
             $e.addClass('drag-from');
-            $(document).bind('mousemove',mouseMove).bind('mouseup',mouseUp);
+            $(document).bind('mousemove', mouseMove).bind('mouseup', mouseUp);
             event.preventDefault();
 
-            function mouseMove(event)
-            {
-                if(Math.abs(event.pageX - startPos.x) <= setting.deviation && Math.abs(event.pageY - startPos.y) <= setting.deviation ) return;
-                if(shadow == null)
+            function mouseMove(event) {
+                var mouseOffset = {
+                    left: event.pageX,
+                    top: event.pageY
+                };
+
+                // ignore small move
+                if(Math.abs(mouseOffset.left - startMouseOffset.left) < setting.deviation && Math.abs(mouseOffset.top - startMouseOffset.top) < setting.deviation) return;
+
+                if(shadow === null) // create shadow
                 {
-                    shadow = $e.clone().removeClass('drag-from').addClass('drag-shadow').css(
-                    {
+                    var cssPosition = $container.css('position');
+                    if(cssPosition != 'absolute' && cssPosition != 'relative' && cssPosition != 'fixed') {
+                        oldCssPosition = cssPosition;
+                        $container.css('position', 'relative');
+                    }
+
+                    shadow = $e.clone().removeClass('drag-from').addClass('drag-shadow').css({
                         position: 'absolute',
                         width: $e.outerWidth(),
                         transition: 'none'
                     }).appendTo($container);
                     $e.addClass('dragging');
 
-                    if(setting.hasOwnProperty('start') && $.isFunction(setting['start']))
-                    {
-                        setting['start']({event: event, element: $e});
-                    }
+                    self.callEvent('start', {
+                        event: event,
+                        element: $e
+                    });
                 }
 
-                var mX = event.pageX,
-                    mY = event.pageY;
-                var dragPos = {left: mX-startOffset.x, top: mY-startOffset.y};
-                    
-                shadow.css(dragPos);
+                var offset = {
+                    left: mouseOffset.left - clickOffset.left,
+                    top: mouseOffset.top - clickOffset.top
+                };
+                var position = {
+                    left: offset.left - containerOffset.left,
+                    top: offset.top - containerOffset.top
+                };
+                shadow.css(position);
+                lastMouseOffset.left = mouseOffset.left;
+                lastMouseOffset.top = mouseOffset.top;
 
+                var isNew = false;
                 isIn = false;
-                var idx = -1, isNew = false;
-                if(!setting.flex)
-                {
+
+                if(!setting.flex) {
                     $targets.removeClass('drop-to');
                 }
-                $targets.each(function(index)
-                {
+
+                var newTarget = null;
+                $targets.each(function() {
                     var t = $(this);
                     var tPos = t.offset();
-                    var tW = t.width(),
-                        tH = t.height(),
-                        tX = tPos.left,
-                        tY = tPos.top;
+                    var tW = t.outerWidth(),
+                        tH = t.outerHeight(),
+                        tX = tPos.left + setting.sensorOffsetX,
+                        tY = tPos.top + setting.sensorOffsetY;
 
-                    if(mX > tX && mY > tY && mX < (tX + tW) && mY < (tY + tH))
-                    {
-                        isIn = true;
-                        if($e.data('id') != t.data('id')) isSelf = false;
-                        if(target == null || (target.data('id') != t.data('id') && (!isSelf))) isNew = true;
-                        target = t;
-                        idx = index;
-                        if(setting.flex)
-                        {
-                            $targets.removeClass('drop-to');
-                        }
-                        t.addClass('drop-to');
-                        return false;
+                    if(mouseOffset.left > tX && mouseOffset.top > tY && mouseOffset.left < (tX + tW) && mouseOffset.top < (tY + tH)) {
+                        if(newTarget) newTarget.removeClass('drop-to');
+                        newTarget = t;
+                        if(!setting.nested) return false;
                     }
                 });
 
-                if(!setting.flex)
-                {
+                if(newTarget) {
+                    isIn = true;
+                    var id = newTarget.data('id');
+                    if($e.data('id') != id) isSelf = false;
+                    if(target === null || (target.data('id') !== id && (!isSelf))) isNew = true;
+                    target = newTarget;
+                    if(setting.flex) {
+                        $targets.removeClass('drop-to');
+                    }
+                    target.addClass('drop-to');
+                }
+
+                if(!setting.flex) {
                     $e.toggleClass('drop-in', isIn);
                     shadow.toggleClass('drop-in', isIn);
-                }
-                else if(target != null && target.length)
-                {
+                } else if(target !== null && target.length) {
                     isIn = true;
                 }
-                
-                if(setting.hasOwnProperty('drag') && $.isFunction(setting['drag']))
-                {
-                    setting['drag']({event: event, isIn: isIn, target: target, element: $e, isNew: isNew, selfTarget: isSelf, startOffset: startOffset, pos: dragPos});
-                }
+
+                self.callEvent('drag', {
+                    event: event,
+                    isIn: isIn,
+                    target: target,
+                    element: $e,
+                    isNew: isNew,
+                    selfTarget: isSelf,
+                    clickOffset: clickOffset,
+                    offset: offset,
+                    position: {
+                        left: offset.left - containerOffset.left,
+                        top: offset.top - containerOffset.top
+                    },
+                    mouseOffset: mouseOffset
+                });
+                event.preventDefault();
             }
 
-            function mouseUp(event)
-            {
-                if(shadow == null)
-                {
+            function mouseUp(event) {
+                if(oldCssPosition) {
+                    $container.css('position', oldCssPosition);
+                }
+
+                if(shadow === null) {
                     $e.removeClass('drag-from');
                     $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
+                    self.callEvent('always', {
+                        event: event,
+                        cancel: true
+                    });
                     return;
                 }
 
                 if(!isIn) target = null;
-                var isSure = true;
-                var dropPos = {left: event.pageX - startOffset.x, top: event.pageY - startOffset.y};
-                if(setting.hasOwnProperty('beforeDrop') && $.isFunction(setting['beforeDrop']))
-                {
-                    var isSure = setting['beforeDrop']({event: event, isIn: isIn, target: target, element: $e, isNew: (!isSelf) && target != null, selfTarget: isSelf, pos: dropPos});
-                    if (isSure != undefined && (!isSure)) isSure = false;
-                    else isSure = true;
-                }
+                var isSure = true,
+                    mouseOffset = {
+                        left: event.pageX,
+                        top: event.pageY
+                    };
+                var offset = {
+                    left: mouseOffset.left - clickOffset.left,
+                    top: mouseOffset.top - clickOffset.top
+                };
+                var moveOffset = {
+                    left: mouseOffset.left - lastMouseOffset.left,
+                    top: mouseOffset.top - lastMouseOffset.top
+                };
+                lastMouseOffset.left = mouseOffset.left;
+                lastMouseOffset.top = mouseOffset.top;
+                var eventOptions = {
+                    event: event,
+                    isIn: isIn,
+                    target: target,
+                    element: $e,
+                    isNew: (!isSelf) && target !== null,
+                    selfTarget: isSelf,
+                    offset: offset,
+                    mouseOffset: mouseOffset,
+                    position: {
+                        left: offset.left - containerOffset.left,
+                        top: offset.top - containerOffset.top
+                    },
+                    lastMouseOffset: lastMouseOffset,
+                    moveOffset: moveOffset
+                };
 
-                if(isSure && isIn && setting.hasOwnProperty('drop') && $.isFunction(setting['drop']))
-                {
-                    setting['drop']({event: event, target: target, element: $e, isNew: (!isSelf) && target != null, pos: dropPos});
+                isSure = self.callEvent('beforeDrop', eventOptions);
+
+                if(isSure && isIn) {
+                    self.callEvent('drop', eventOptions);
                 }
 
                 $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
@@ -153,30 +242,32 @@
                 $e.removeClass('dragging').removeClass('drag-from');
                 shadow.remove();
 
-                if(setting.hasOwnProperty('finish') && $.isFunction(setting['finish']))
-                {
-                    setting['finish']({event: event, target: target, element: $e, isNew: (!isSelf) && target != null});
-                }
+                self.callEvent('finish', eventOptions);
+                self.callEvent('always', eventOptions);
 
                 event.preventDefault();
             }
         });
 
-    }
+    };
 
-    $.fn.droppable = function(option)
-    {
-        return this.each(function()
-        {
-            var $this   = $(this);
-            var data    = $this.data('zui.droppable');
+    Droppable.prototype.reset = function() {
+        this.$triggerTarget.off('mousedown');
+        this.handleMouseEvents();
+    };
+
+    $.fn.droppable = function(option) {
+        return this.each(function() {
+            var $this = $(this);
+            var data = $this.data('zui.droppable');
             var options = typeof option == 'object' && option;
 
-            if (!data) $this.data('zui.droppable', (data = new Droppable(this, options)));
+            if(!data) $this.data('zui.droppable', (data = new Droppable(this, options)));
 
-            if (typeof option == 'string') data[option]();
-        })
+            if(typeof option == 'string') data[option]();
+        });
     };
 
     $.fn.droppable.Constructor = Droppable;
-}(jQuery,window,document,Math);
+}(jQuery, document, Math));
+

@@ -1,6 +1,10 @@
 /* ========================================================================
  * Bootstrap: dropdown.js v3.0.0
  * http://twbs.github.com/bootstrap/javascript.html#dropdowns
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -18,137 +22,144 @@
  * ======================================================================== */
 
 
-+function ($) { "use strict";
++ function($) {
+    'use strict';
 
-  // DROPDOWN CLASS DEFINITION
-  // =========================
+    // DROPDOWN CLASS DEFINITION
+    // =========================
 
-  var backdrop = '.dropdown-backdrop'
-  var toggle   = '[data-toggle=dropdown]'
-  var Dropdown = function (element) {
-    var $el = $(element).on('click.bs.dropdown', this.toggle)
-  }
-
-  Dropdown.prototype.toggle = function (e) {
-    var $this = $(this)
-
-    if ($this.is('.disabled, :disabled')) return
-
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
-    clearMenus()
-
-    if (!isActive) {
-      if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
-        // if mobile we we use a backdrop because click events don't delegate
-        $('<div class="dropdown-backdrop"/>').insertAfter($(this)).on('click', clearMenus)
-      }
-
-      $parent.trigger(e = $.Event('show.bs.dropdown'))
-
-      if (e.isDefaultPrevented()) return
-
-      $parent
-        .toggleClass('open')
-        .trigger('shown.bs.dropdown')
-
-      $this.focus()
+    var zuiname = 'zui.dropdown';
+    var backdrop = '.dropdown-backdrop'
+    var toggle = '[data-toggle=dropdown]'
+    var Dropdown = function(element) {
+        var $el = $(element).on('click.' + zuiname, this.toggle)
     }
 
-    return false
-  }
+    Dropdown.prototype.toggle = function(e) {
+        var $this = $(this)
 
-  Dropdown.prototype.keydown = function (e) {
-    if (!/(38|40|27)/.test(e.keyCode)) return
+        if($this.is('.disabled, :disabled')) return
 
-    var $this = $(this)
+        var $parent = getParent($this)
+        var isActive = $parent.hasClass('open')
 
-    e.preventDefault()
-    e.stopPropagation()
+        clearMenus()
 
-    if ($this.is('.disabled, :disabled')) return
+        if(!isActive) {
+            if('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+                // if mobile we we use a backdrop because click events don't delegate
+                $('<div class="dropdown-backdrop"/>').insertAfter($(this)).on('click', clearMenus)
+            }
 
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
+            $parent.trigger(e = $.Event('show.' + zuiname))
 
-    if (!isActive || (isActive && e.keyCode == 27)) {
-      if (e.which == 27) $parent.find(toggle).focus()
-      return $this.click()
+            if(e.isDefaultPrevented()) return
+
+            $parent
+                .toggleClass('open')
+                .trigger('shown.' + zuiname)
+
+            $this.focus()
+        }
+
+        return false
     }
 
-    var $items = $('[role=menu] li:not(.divider):visible a', $parent)
+    Dropdown.prototype.keydown = function(e) {
+        if(!/(38|40|27)/.test(e.keyCode)) return
 
-    if (!$items.length) return
+        var $this = $(this)
 
-    var index = $items.index($items.filter(':focus'))
+        e.preventDefault()
+        e.stopPropagation()
 
-    if (e.keyCode == 38 && index > 0)                 index--                        // up
-    if (e.keyCode == 40 && index < $items.length - 1) index++                        // down
-    if (!~index)                                      index=0
+        if($this.is('.disabled, :disabled')) return
 
-    $items.eq(index).focus()
-  }
+        var $parent = getParent($this)
+        var isActive = $parent.hasClass('open')
 
-  function clearMenus() {
-    $(backdrop).remove()
-    $(toggle).each(function (e) {
-      var $parent = getParent($(this))
-      if (!$parent.hasClass('open')) return
-      $parent.trigger(e = $.Event('hide.bs.dropdown'))
-      if (e.isDefaultPrevented()) return
-      $parent.removeClass('open').trigger('hidden.bs.dropdown')
-    })
-  }
+        if(!isActive || (isActive && e.keyCode == 27)) {
+            if(e.which == 27) $parent.find(toggle).focus()
+            return $this.click()
+        }
 
-  function getParent($this) {
-    var selector = $this.attr('data-target')
+        var $items = $('[role=menu] li:not(.divider):visible a', $parent)
 
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && /#/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+        if(!$items.length) return
+
+        var index = $items.index($items.filter(':focus'))
+
+        if(e.keyCode == 38 && index > 0) index-- // up
+            if(e.keyCode == 40 && index < $items.length - 1) index++ // down
+                if(!~index) index = 0
+
+        $items.eq(index).focus()
     }
 
-    var $parent = selector && $(selector)
+    function clearMenus() {
+        $(backdrop).remove()
+        $(toggle).each(function(e) {
+            var $parent = getParent($(this))
+            if(!$parent.hasClass('open')) return
+            $parent.trigger(e = $.Event('hide.' + zuiname))
+            if(e.isDefaultPrevented()) return
+            $parent.removeClass('open').trigger('hidden.' + zuiname)
+        })
+    }
 
-    return $parent && $parent.length ? $parent : $this.parent()
-  }
+    function getParent($this) {
+        var selector = $this.attr('data-target')
 
-
-  // DROPDOWN PLUGIN DEFINITION
-  // ==========================
-
-  var old = $.fn.dropdown
-
-  $.fn.dropdown = function (option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('dropdown')
-
-      if (!data) $this.data('dropdown', (data = new Dropdown(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  $.fn.dropdown.Constructor = Dropdown
-
-
-  // DROPDOWN NO CONFLICT
-  // ====================
-
-  $.fn.dropdown.noConflict = function () {
-    $.fn.dropdown = old
-    return this
-  }
+        if(!selector) {
+            selector = $this.attr('href')
+            selector = selector && /#/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+        }
+        var $parent;
+        try {
+            $parent = selector && $(selector);
+        } catch(e) {}
+        return $parent && $parent.length ? $parent : $this.parent()
+    }
 
 
-  // APPLY TO STANDARD DROPDOWN ELEMENTS
-  // ===================================
+    // DROPDOWN PLUGIN DEFINITION
+    // ==========================
 
-  $(document)
-    .on('click.bs.dropdown.data-api', clearMenus)
-    .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
-    .on('click.bs.dropdown.data-api'  , toggle, Dropdown.prototype.toggle)
-    .on('keydown.bs.dropdown.data-api', toggle + ', [role=menu]' , Dropdown.prototype.keydown)
+    var old = $.fn.dropdown
+
+    $.fn.dropdown = function(option) {
+        return this.each(function() {
+            var $this = $(this)
+            var data = $this.data('dropdown')
+
+            if(!data) $this.data('dropdown', (data = new Dropdown(this)))
+            if(typeof option == 'string') data[option].call($this)
+        })
+    }
+
+    $.fn.dropdown.Constructor = Dropdown
+
+
+    // DROPDOWN NO CONFLICT
+    // ====================
+
+    $.fn.dropdown.noConflict = function() {
+        $.fn.dropdown = old
+        return this
+    }
+
+
+    // APPLY TO STANDARD DROPDOWN ELEMENTS
+    // ===================================
+
+    var apiName = zuiname + '.data-api'
+    $(document)
+        .on('click.' + apiName, clearMenus)
+        .on('click.' + apiName, '.dropdown form', function(e) {
+            e.stopPropagation()
+        })
+        .on('click.' + apiName, toggle, Dropdown.prototype.toggle)
+        .on('keydown.' + apiName, toggle + ', [role=menu]', Dropdown.prototype.keydown)
 
 }(window.jQuery);
+

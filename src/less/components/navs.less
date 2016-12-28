@@ -1,40 +1,42 @@
-//
-// Navs
-// --------------------------------------------------
+/// ========================================================================
+/// Bootstrap: navs.less
+/// https://github.com/twbs/bootstrap/blob/master/less/navs.less
+/// 
+/// ZUI: The file has been changed in ZUI. It will not keep update with the
+/// Bootsrap version in the future.
+/// http://zui.sexy
+/// ========================================================================
+/// Bootrap: Copyright 2011-2016 Twitter, Inc. Licensed under MIT
+/// ========================================================================
 
 
 // Base class
-// --------------------------------------------------
 
-.nav
-{
+.nav {
   margin-bottom: 0;
   padding-left: 0; // Override default ul/ol
   list-style: none;
-  .clearfix();
+  &:extend(.clearfix all);
 
-  > .nav-heading
-  {
+  // nav heading is <li> tag without <a> in side
+  > .nav-heading {
     padding: @nav-link-padding;
     color: @color-gray;
     font-weight: @headings-font-weight;
   }
 
-  > li
-  {
+  > li {
     position: relative;
     display: block;
 
-    > a
-    {
+    > a {
       position: relative;
       display: block;
       padding: @nav-link-padding;
-      .transition(all,@animation-speed-fast,@animation-type);
       color: @color-fore;
+
       &:hover,
-      &:focus
-      {
+      &:focus {
         text-decoration: none;
         background-color: @nav-link-hover-bg;
         color: @link-hover-color;
@@ -42,13 +44,11 @@
     }
 
     // Disabled state sets text to gray and nukes hover/tab effects
-    &.disabled > a
-    {
+    &.disabled > a {
       color: @nav-disabled-link-color;
 
       &:hover,
-      &:focus
-      {
+      &:focus {
         color: @nav-disabled-link-hover-color;
         text-decoration: none;
         background-color: transparent;
@@ -58,349 +58,219 @@
   }
 
   // Open dropdowns
-  .open > a
-  {
+  .open > a {
     &,
     &:hover,
-    &:focus
-    {
+    &:focus {
       background-color: @nav-link-hover-bg;
       border-color: @link-color;
-
-      .caret
-      {
-        border-top-color: @link-hover-color;
-        border-bottom-color: @link-hover-color;
-      }
     }
   }
-
-  // // Nav dividers (deprecated with v3.0.1)
-  // //
-  // // This should have been removed in v3 with the dropping of `.nav-list`, but
-  // // we missed it. We don't currently support this anywhere, but in the interest
-  // // of maintaining backward compatibility in case you use it, it's deprecated.
-  // .nav-divider
-  // {
-  //   .nav-divider();
-  // }
 
   // Prevent IE8 from misplacing imgs
   //
   // See https://github.com/h5bp/html5-boilerplate/issues/984#issuecomment-3985989
-  > li > a > img
-  {
-    max-width: none;
-  }
+  > li > a > img { max-width: none; }
 }
 
+
 // Pills
-// -------------------------
-.nav-pills
-{
-  > li
-  {
+
+.nav-pills {
+  > li {
     float: left;
 
     // Links rendered as pills
-    > a
-    {
-      border-radius: @nav-pills-border-radius;
-    }
-    + li
-    {
-      margin-left: 2px;
-    }
-
-    // &:hover,
-    // &:focus {
-    //   border-radius: 
-    // }
+    > a { border-radius: @nav-pills-border-radius; }
+    + li { margin-left: 2px; }
 
     // Active state
-    &.active > a
-    {
+    &.active > a {
       &,
       &:hover,
-      &:focus
-      {
+      &:focus {
         color: @nav-pills-active-link-hover-color;
         background-color: @nav-pills-active-link-hover-bg;
-
-        .caret
-        {
-          border-top-color: @nav-pills-active-link-hover-color;
-          border-bottom-color: @nav-pills-active-link-hover-color;
-        }
       }
     }
   }
 }
 
-// Secondary
-// -------------------------
-.nav-primary
-{
-  > li
-  {
+
+// Primary
+
+.nav-primary {
+  > li {
     float: left;
     margin-left: -1px;
 
-    &:first-child
-    {
-      > a
-      {
+    &:first-child {
+      > a {
         margin-left: 0;
         .border-left-radius(@border-radius-base);
       }
     }
 
-    &:last-child
-    {
-      > a
-      {
+    &:last-child {
+      > a {
         .border-right-radius(@border-radius-base);
       }
     }
 
     // Links rendered
-    > a
-    {
-      border: 1px solid @nav-primary-border-color;
-    }
+    > a { border: 1px solid @nav-primary-border-color; }
 
     // Active state
-    &.active > a
-    {
+    &.active > a {
       &,
       &:hover,
-      &:focus
-      {
+      &:focus {
         background-color: @component-active-bg;
         border-color: @component-active-bg;
         color: @component-active-color;
-
-        .caret
-        {
-          border-top-color: @component-active-caret-color;
-          border-bottom-color: @component-active-caret-color;
-        }
       }
     }
   }
 }
 
+
 // Secondary
-// -------------------------
-.nav-secondary
-{
-  > li
-  {
+
+.nav-secondary {
+  > li {
     float: left;
 
     // Links rendered
-    > a
-    {
-      border-bottom: 2px solid @nav-secondary-border-color;
-    }
-    + li
-    {
-      // margin-left: 2px;
-    }
+    > a { border-bottom: 2px solid @nav-secondary-border-color; }
 
     // Active state
-    &.active > a
-    {
+    &.active > a {
       &,
       &:hover,
-      &:focus
-      {
+      &:focus {
         color: @nav-secondary-active-link-hover-color;
         border-bottom-color: @nav-secondary-active-border-color;
-
-        .caret
-        {
-          border-top-color: @nav-secondary-active-link-hover-color;
-          border-bottom-color: @nav-secondary-active-link-hover-color;
-        }
       }
     }
 
-    &.nav-heading
-    {
+    &.nav-heading {
       border-bottom: 2px solid @nav-secondary-border-color;
     }
   }
 }
 
-// Stacked pills
-.nav-stacked
-{
-  > li
-  {
+
+// Stacked navs
+
+.nav-stacked {
+  > li {
     float: none;
-    + li
-    {
+    + li {
       margin-top: 2px;
       margin-left: 0; // no need for this gap between nav items
     }
   }
 
-  &.nav-primary
-  {
-    > li
-    {
+  &.nav-primary {
+    > li {
       &,
-      > a
-      {
+      > a {
         margin-left: 0;
         .border-bottom-radius(0);
       }
-      + li
-      {
+      + li {
         margin-top: -1px;
       }
-      &:first-child
-      {
+      &:first-child {
         margin-top: 0;
         > a,
-        &.nav-heading
-        {
+        &.nav-heading {
           margin-left: 0;
           .border-top-radius(@border-radius-base);
         }
       }
 
-      &:last-child
-      {
-        > a
-        {
+      &:last-child {
+        > a {
+          .border-top-radius(0);
           .border-bottom-radius(@border-radius-base);
         }
       }
 
       // Active state
-      &.active > a
-      {
+      &.active > a {
         &,
         &:hover,
-        &:focus
-        {
-          // .active-mark-left();
+        &:focus {
         }
       }
-      &.nav-heading
-      {
+      &.nav-heading {
         border: 1px solid @color-gray-light;
         background-color: @color-gray-pale;
       }
     }
   }
 
-  // &.nav-secondary
-  // {
-  //   > li
-  //   {
-  //     > a
-  //     {
-  //       border: none;
-  //       .border-left-radius(@border-radius-base);
-  //       .box-shadow(inset -2px 0 0 @nav-secondary-active-link-hover-bg);
+  &.nav-secondary {
+    > li {
+      > a {
+        border: none;
+        box-shadow: inset 2px 0 0 @nav-secondary-active-link-hover-bg;
+        .border-right-radius(@border-radius-base);
 
-  //       &:hover
-  //       {
-  //         .box-shadow(inset -2px 0 0 @nav-secondary-border-color);
-  //       }
-  //     }
-  //     + li
-  //     {
-  //       margin-top: -1px;
-  //     }
-  //     &:first-child
-  //     {
-  //       margin-top: 0;
-  //     }
-  //     // Active state
-  //     &.active > a
-  //     {
-  //       &,
-  //       &:hover,
-  //       &:focus
-  //       {
-  //         background-color: @nav-secondary-active-link-hover-bg;
-  //         .box-shadow(inset -2px 0 0 @nav-secondary-active-border-color);
-  //       }
-  //     }
-  //     &.nav-heading
-  //     {
-  //       border-bottom: 1px solid @color-gray-light;
-  //     }
-  //   }
-  // }
+        &:hover { box-shadow: inset 2px 0 0 @nav-secondary-border-color; }
+      }
+      + li { margin-top: -1px; }
+      &:first-child { margin-top: 0; }
+      // Active state
+      &.active > a {
+        &,
+        &:hover,
+        &:focus {
+          background-color: @nav-secondary-active-link-hover-bg;
+          box-shadow: inset 2px 0 0 @nav-secondary-active-border-color;
+
+        }
+      }
+      &.nav-heading { border-bottom: 1px solid @color-gray-light; }
+    }
+  }
 }
 
 
-// Nav variations
-// --------------------------------------------------
-
 // Justified nav links
-// -------------------------
 
-.nav-justified
-{
+.nav-justified {
   width: 100%;
 
-  > li
-  {
+  > li {
     float: none;
-     > a
-     {
+     > a {
       text-align: center;
       margin-bottom: 5px;
     }
   }
 
-
-
-  @media (min-width: @screen-sm-min)
-  {
-    > li
-    {
+  @media (min-width: @screen-sm-min) {
+    > li {
       display: table-cell;
       width: 1%;
-      > a
-      {
-        margin-bottom: 0;
-      }
+      > a { margin-bottom: 0; }
     }
 
-    &.nav-primary
-    {
-      > li
-      {
-        + li
-        {
-          > a
-          {
-            border-left: 0;
-          }
-        }
-      }
+    &.nav-primary {
+      > li + li > a { border-left: 0; }
     }
   }
 }
 
-// Dropdowns
-// -------------------------
 
-// Make dropdown carets use link color in navs
-.nav .caret
-{
-  border-top-color: @link-color;
-  border-bottom-color: @link-color;
-}
-.nav a:hover .caret
-{
-  border-top-color: @link-hover-color;
-  border-bottom-color: @link-hover-color;
+// Dropdowns
+
+// Specific dropdowns
+.nav-tabs .dropdown-menu {
+  // make dropdown border overlap tab border
+  margin-top: -1px;
+  // Remove the top rounded corners here since there is a hard edge above the menu
+  .border-top-radius(0);
 }

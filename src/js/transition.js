@@ -1,56 +1,70 @@
 /* ========================================================================
- * Bootstrap: transition.js v3.0.2
+ * Bootstrap: transition.js v3.2.0
  * http://getbootstrap.com/javascript/#transitions
+ *  
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
- * Copyright 2013 Twitter, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2011-2014 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
 
-+function ($) { "use strict";
++ function($) {
+    'use strict';
 
-  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
-  // ============================================================
+    // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+    // ============================================================
 
-  function transitionEnd() {
-    var el = document.createElement('bootstrap')
+    function transitionEnd() {
+        var el = document.createElement('bootstrap')
 
-    var transEndEventNames = {
-      'WebkitTransition' : 'webkitTransitionEnd'
-    , 'MozTransition'    : 'transitionend'
-    // , 'OTransition'      : 'oTransitionEnd otransitionend' // doesn't work in opera11 and disable in opera browsers
-    , 'transition'       : 'transitionend'
+        var transEndEventNames = {
+            WebkitTransition: 'webkitTransitionEnd',
+            MozTransition: 'transitionend',
+            OTransition: 'oTransitionEnd otransitionend',
+            transition: 'transitionend'
+        }
+
+        for(var name in transEndEventNames) {
+            if(el.style[name] !== undefined) {
+                return {
+                    end: transEndEventNames[name]
+                }
+            }
+        }
+
+        return false // explicit for ie8 (  ._.)
     }
 
-    for (var name in transEndEventNames) {
-      if (el.style[name] !== undefined) {
-        return { end: transEndEventNames[name] }
-      }
+    // http://blog.alexmaccaw.com/css-transitions
+    $.fn.emulateTransitionEnd = function(duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function() {
+            called = true
+        })
+        var callback = function() {
+            if(!called) $($el).trigger($.support.transition.end)
+        }
+        setTimeout(callback, duration)
+        return this
     }
-  }
 
-  // http://blog.alexmaccaw.com/css-transitions
-  $.fn.emulateTransitionEnd = function (duration) {
-    var called = false, $el = this
-    $(this).one($.support.transition.end, function () { called = true })
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
-    setTimeout(callback, duration)
-    return this
-  }
+    $(function() {
+        $.support.transition = transitionEnd()
 
-  $(function () {
-    $.support.transition = transitionEnd()
-  })
+        if(!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+            bindType: $.support.transition.end,
+            delegateType: $.support.transition.end,
+            handle: function(e) {
+                if($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+            }
+        }
+    })
 
 }(jQuery);
+

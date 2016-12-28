@@ -1,16 +1,26 @@
-//
-// Forms
-// --------------------------------------------------
+/// ========================================================================
+/// Bootstrap: form.less
+/// https://github.com/twbs/bootstrap/blob/master/less/form.less
+/// 
+/// ZUI: The file has been changed in ZUI. It will not keep update with the
+/// Bootsrap version in the future.
+/// http://zui.sexy
+/// ========================================================================
+/// Bootrap: Copyright 2011-2016 Twitter, Inc. Licensed under MIT
+/// ========================================================================
 
 
 // Normalize non-controls
 //
 // Restyle and baseline non-control form elements.
 
-fieldset { padding: 0; margin: 0; border: 0; }
+fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
 
-legend 
-{
+legend {
   display: block;
   width: 100%;
   padding: 0;
@@ -22,19 +32,22 @@ legend
   border-bottom: 1px solid @legend-border-color;
 }
 
-label { display: inline-block; margin-bottom: 5px; font-weight: bold; }
+label {
+  display: inline-block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
 
 
 // Normalize form controls
 
 // Override content-box in Normalize (* isn't specific enough)
-input[type="search"] { .box-sizing(border-box); }
+input[type="search"] { box-sizing: border-box; }
 
 // Position radios and checkboxes better
-input[type="radio"], input[type="checkbox"] 
-{
-  margin: 4px 0 0;
-  margin-top: 1px \9; /* IE8-9 */
+input[type="radio"], input[type="checkbox"] {
+  margin: 5px 0 0;
+  margin-top: 0 \9; /* IE8-9 */
   line-height: normal;
 }
 
@@ -43,6 +56,12 @@ input[type="file"] { display: block; }
 
 // Make multiple select elements height not fixed
 select[multiple], select[size] { height: auto; }
+
+// Remove dashed box in firefox
+select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 #000;
+}
 
 // Fix optgroup Firefox bug per https://github.com/twbs/bootstrap/issues/7611
 select optgroup { font-size: inherit; font-style: inherit; font-family: inherit; }
@@ -60,7 +79,7 @@ input[type="number"] {
 
 
 // Placeholder
-//
+
 // Placeholder text gets special styles because when browsers invalidate entire
 // lines if it doesn't understand a selector/
 .form-control { .placeholder(); }
@@ -88,8 +107,7 @@ input[type="number"] {
 // input[type="tel"]
 // input[type="color"]
 
-.form-control 
-{
+.form-control {
   display: block;
   width: 100%;
   height: @input-height-base; // Make inputs at least the height of their button counterpart (base line-height + padding + border)
@@ -101,7 +119,8 @@ input[type="number"] {
   background-color: @input-bg;
   border: 1px solid @input-border;
   border-radius: @input-border-radius;
-  .box-shadow(inset 0 1px 1px rgba(0,0,0,.075));
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+
   .transition(~"border-color ease-in-out .15s, box-shadow ease-in-out .15s");
 
   // Customize the `:focus` state to imitate native WebKit styles.
@@ -111,7 +130,15 @@ input[type="number"] {
   // Note: HTML5 says that controls under a fieldset > legend:first-child won't
   // be disabled if the fieldset is disabled. Due to implementation difficulty,
   // we don't honor that edge case; we style them as disabled anyway.
-  &[disabled], &[readonly], fieldset[disabled] & { cursor: not-allowed; background-color: @input-bg-disabled; }
+  &[disabled],
+  &[readonly],
+  fieldset[disabled] & 
+  { 
+    cursor: not-allowed;
+    background-color: @input-bg-disabled;
+  }
+
+  &[readonly] { cursor: default; }
 
   // Reset height for `textarea`s
   textarea& { height: auto; }
@@ -130,32 +157,40 @@ input[type="number"] {
 //
 // Indent the labels to position radios/checkboxes as hanging controls.
 
-.radio, .checkbox 
-{
+.radio, .checkbox {
+  position: relative;
   display: block;
-  min-height: @line-height-computed; // clear the floating input if there is no label text
   margin-top: 10px;
   margin-bottom: 10px;
-  padding-left: 20px;
-  vertical-align: middle;
-  label { display: inline; margin-bottom: 0; font-weight: normal; cursor: pointer; }
+
+  label {
+    min-height: @line-height-computed; // Ensure the input doesn't jump when there is no text
+    padding-left: 20px;
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+  }
 }
+
 .radio input[type="radio"],
 .radio-inline input[type="radio"],
 .checkbox input[type="checkbox"],
 .checkbox-inline input[type="checkbox"] {
-  float: left;
+  position: absolute;
   margin-left: -20px;
+  margin-top: 3px;
+  margin-top: ~"4px \9";
 }
 
-.radio + .radio, .checkbox + .checkbox 
-{
+.radio + .radio,
+.checkbox + .checkbox {
   margin-top: -5px; // Move up sibling radios or checkboxes for tighter spacing
 }
 
 // Radios and checkboxes on same line
-.radio-inline, .checkbox-inline 
-{
+.radio-inline,
+.checkbox-inline {
+  position: relative;
   display: inline-block;
   padding-left: 20px;
   margin-bottom: 0;
@@ -163,23 +198,46 @@ input[type="number"] {
   font-weight: normal;
   cursor: pointer;
 }
-
-.radio-inline + .radio-inline, .checkbox-inline + .checkbox-inline 
-{
+.radio-inline + .radio-inline,
+.checkbox-inline + .checkbox-inline {
   margin-top: 0;
   margin-left: 10px; // space out consecutive inline controls
 }
 
 // Apply same disabled cursor tweak as for inputs
+// Some special care is needed because <label>s don't inherit their parent's `cursor`.
 //
 // Note: Neither radios nor checkboxes can be readonly.
-input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .checkbox-inline 
-{
+input[type="radio"],
+input[type="checkbox"] {
   &[disabled],
-  fieldset[disabled] & { cursor: not-allowed; }
+  &.disabled,
+  fieldset[disabled] & {
+    cursor: @cursor-disabled;
+  }
+}
+// These classes are used directly on <label>s
+.radio-inline,
+.checkbox-inline {
+  &.disabled,
+  fieldset[disabled] & {
+    cursor: @cursor-disabled;
+  }
+}
+// These classes are used on elements with <label> descendants
+.radio,
+.checkbox {
+  &.disabled,
+  fieldset[disabled] & {
+    label {
+      cursor: @cursor-disabled;
+    }
+  }
 }
 
+
 // Form control sizing
+
 .input-sm { .input-size(@input-height-small; @padding-small-vertical; @padding-small-horizontal; @font-size-small; @line-height-small; @border-radius-small); }
 .input-lg { .input-size(@input-height-large; @padding-large-vertical; @padding-large-horizontal; @font-size-large; @line-height-large; @border-radius-large); }
 
@@ -189,7 +247,7 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
 // Apply contextual and semantic states to individual form controls.
 
 .has-warning { .form-control-validation(@state-warning-text; @state-warning-text; @state-warning-bg); }
-.has-error { .form-control-validation(@state-danger-text; @state-danger-text; @state-danger-bg); }
+.has-error   { .form-control-validation(@state-danger-text; @state-danger-text; @state-danger-bg); }
 .has-success { .form-control-validation(@state-success-text; @state-success-text; @state-success-bg); }
 
 
@@ -198,10 +256,13 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
 // Apply class to a `p` element to make any string of text align with labels in
 // a horizontal form layout.
 
-.form-control-static 
-{
-  margin-bottom: 0; // Remove default margin from `p`
+.form-control-static {
+  // Size it appropriately next to real form controls
   padding-top: (@padding-base-vertical + 1);
+  padding-bottom: (@padding-base-vertical + 1);
+  // Remove default margin from `p`
+  margin-bottom: 0;
+  min-height: (@line-height-computed + @font-size-base);
 }
 
 
@@ -210,14 +271,11 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
 // Apply to any element you wish to create light text for placement immediately
 // below a form control. Use for general help, formatting, or instructional text.
 
-.help-block 
-{
+.help-block {
   display: block; // account for any element using help-block
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin: 5px 0;
   color: lighten(@text-color, 25%); // lighten the text some for contrast
 }
-
 
 
 // Inline forms
@@ -231,23 +289,28 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
 //
 // Heads up! This is mixin-ed into `.navbar-form` in navbars.less.
 
-.form-inline 
-{
-
+.form-inline {
   // Kick in the inline
   @media (min-width: @screen-tablet) 
   {
     // Inline-block all the things for "inline"
-    .form-group  { display: inline-block; margin-bottom: 0; vertical-align: middle; }
+    .form-group  {
+      display: inline-block;
+      margin-bottom: 0; 
+      vertical-align: middle;
+    }
 
     // In navbar-form, allow folks to *not* use `.form-group`
-    .form-control { display: inline-block; }
+    .form-control { 
+      display: inline-block;
+      width: auto;
+      vertical-align: middle;
+    }
 
     // Remove default margin on radios/checkboxes that were used for stacking, and
     // then undo the floating of radios and checkboxes to match (which also avoids
     // a bug in WebKit: https://github.com/twbs/bootstrap/issues/1969).
-    .radio, .checkbox 
-    {
+    .radio, .checkbox {
       display: inline-block;
       margin-top: 0;
       margin-bottom: 0;
@@ -263,11 +326,13 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
 // Horizontal forms are built on grid classes and allow you to create forms with
 // labels on the left and inputs on the right.
 
-.form-horizontal 
-{
+.form-horizontal {
   // Consistent vertical alignment of labels, radios, and checkboxes
-  .control-label, .radio, .checkbox, .radio-inline, .checkbox-inline 
-  {
+  .form-group > label,
+  .radio,
+  .checkbox,
+  .radio-inline,
+  .checkbox-inline {
     margin-top: 0;
     margin-bottom: 0;
     padding-top: (@padding-base-vertical + 1); // Default padding plus a border
@@ -277,22 +342,25 @@ input[type="radio"], input[type="checkbox"], .radio, .radio-inline, .checkbox, .
   .form-group { .make-row(); }
 
   // Only right align form labels here when the columns stop stacking
-  @media (min-width: @screen-tablet) 
-  {
-    .control-label { text-align: right; }
+  @media (min-width: @screen-tablet) {
+    .form-group > label { text-align: right; }
   }
 }
 
-.required
-{
+.required {
   position: relative;
-  &:after
-  {
+  &:after {
     content: '*';
     color: @state-danger-text;
     display: inline-block;
     position: absolute;
-    top: 5px;
+    top: 0;
+    right: -10px;
     font-size: @font-size-large;
+  }
+
+  .form-horizontal &:after {
+    top: 5px;
+    right: -1px;
   }
 }

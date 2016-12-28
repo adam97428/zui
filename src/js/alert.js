@@ -15,84 +15,91 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ======================================================================== */
 
 
-+function ($) { "use strict";
++ function($) {
+    'use strict';
 
-  // ALERT CLASS DEFINITION
-  // ======================
+    // ALERT CLASS DEFINITION
+    // ======================
 
-  var dismiss = '[data-dismiss="alert"]'
-  var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
-  }
+    var dismiss = '[data-dismiss="alert"]'
+    var zuiname = 'zui.alert';
 
-  Alert.prototype.close = function (e) {
-    var $this    = $(this)
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+    var Alert = function(el) {
+        $(el).on('click', dismiss, this.close)
     }
 
-    var $parent = $(selector)
+    Alert.prototype.close = function(e) {
+        var $this = $(this)
+        var selector = $this.attr('data-target')
 
-    if (e) e.preventDefault()
+        if(!selector) {
+            selector = $this.attr('href')
+            selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
 
-    if (!$parent.length) {
-      $parent = $this.hasClass('alert') ? $this : $this.parent()
+        var $parent = $(selector)
+
+        if(e) e.preventDefault()
+
+        if(!$parent.length) {
+            $parent = $this.hasClass('alert') ? $this : $this.parent()
+        }
+
+        $parent.trigger(e = $.Event('close.' + zuiname))
+
+        if(e.isDefaultPrevented()) return
+
+        $parent.removeClass('in')
+
+        function removeElement() {
+            $parent.trigger('closed.' + zuiname).remove()
+        }
+
+        $.support.transition && $parent.hasClass('fade') ?
+            $parent
+            .one($.support.transition.end, removeElement)
+            .emulateTransitionEnd(150) :
+            removeElement()
     }
 
-    $parent.trigger(e = $.Event('close.bs.alert'))
 
-    if (e.isDefaultPrevented()) return
+    // ALERT PLUGIN DEFINITION
+    // =======================
 
-    $parent.removeClass('in')
+    var old = $.fn.alert
 
-    function removeElement() {
-      $parent.trigger('closed.bs.alert').remove()
+    $.fn.alert = function(option) {
+        return this.each(function() {
+            var $this = $(this)
+            var data = $this.data(zuiname)
+
+            if(!data) $this.data(zuiname, (data = new Alert(this)))
+            if(typeof option == 'string') data[option].call($this)
+        })
     }
 
-    $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one($.support.transition.end, removeElement)
-        .emulateTransitionEnd(150) :
-      removeElement()
-  }
+    $.fn.alert.Constructor = Alert
 
 
-  // ALERT PLUGIN DEFINITION
-  // =======================
+    // ALERT NO CONFLICT
+    // =================
 
-  var old = $.fn.alert
-
-  $.fn.alert = function (option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.alert')
-
-      if (!data) $this.data('bs.alert', (data = new Alert(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  $.fn.alert.Constructor = Alert
+    $.fn.alert.noConflict = function() {
+        $.fn.alert = old
+        return this
+    }
 
 
-  // ALERT NO CONFLICT
-  // =================
+    // ALERT DATA-API
+    // ==============
 
-  $.fn.alert.noConflict = function () {
-    $.fn.alert = old
-    return this
-  }
-
-
-  // ALERT DATA-API
-  // ==============
-
-  $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
+    $(document).on('click.' + zuiname + '.data-api', dismiss, Alert.prototype.close)
 
 }(window.jQuery);

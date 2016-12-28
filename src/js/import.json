@@ -1,10 +1,13 @@
 [
+    "store.js",
     "hotkeys.js",
+    "mousewheel.js",
     "resize.js",
     "string.js",
     "date.js",
     "cookie.js",
-    "unities.js",
+    "jquery.extensions.js",
+    "browser.js",
     "device.js",
     "transition.js",
     "alert.js",
@@ -22,9 +25,11 @@
     "lightbox.js",
     "draggable.js",
     "droppable.js",
+    "sortable.js",
     "dashboard.js",
     "menu.js",
-    "table.data.js",
+    "datatable.js",
+    "calendar.js",
     "bootbox.js",
     "messager.js",
     "boards.js",
@@ -32,3 +37,4 @@
     "img-cutter.js",
     "auto-trigger.js"
 ]
+
